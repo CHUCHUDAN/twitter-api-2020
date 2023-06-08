@@ -72,6 +72,34 @@ const tweetController = {
     } catch (err) {
       next(err)
     }
+  },
+  // 瀏覽推文的所有回應
+  tweetReplies: async (req, res, next) => {
+    try {
+      const id = req.params.tweet_id
+      const tweet = await Tweet.findByPk(id, { raw: true })
+      if (!tweet) newErrorGenerate('推文不存在', 404)
+
+      let replies = await Reply.findAll({
+        attributes: ['id', 'comment', 'createdAt', 'updatedAt'],
+        where: { TweetId: id },
+        include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
+        order: [['createdAt', 'DESC']],
+        raw: true,
+        nest: true
+      })
+
+      if (!replies) newErrorGenerate('找不到回應訊息', 404)
+
+      replies = replies.map(reply => ({
+        ...reply,
+        relativeTimeFromNow: relativeTimeFromNow(reply.createdAt)
+      }))
+
+      return res.json(replies)
+    } catch (err) {
+      next(err)
+    }
   }
 }
 module.exports = tweetController
