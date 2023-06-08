@@ -119,7 +119,7 @@ const userController = {
   getUserReplies: async (req, res, next) => {
     try {
       const userId = req.params.id
-      const user = await User.findByPk(userId, { raw: true, attributes: ['name', 'account', 'avatar'] })
+      const user = await User.findByPk(userId)
       if (!user) newErrorGenerate('使用者不存在', 404)
       const replies = await Reply.findAll({
         where: { UserId: userId },
