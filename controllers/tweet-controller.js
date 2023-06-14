@@ -171,8 +171,8 @@ const tweetController = {
           'createdAt',
           'updatedAt'
         ],
-        include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
-        where: { TweetId: id },
+        // include: [{ model: User, attributes: ['id', 'name', 'account', 'avatar'] }],
+        // where: { TweetId: id },
         order: [['createdAt', 'DESC']],
         raw: true,
         nest: true
