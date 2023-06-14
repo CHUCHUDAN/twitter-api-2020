@@ -23,14 +23,24 @@ const userController = {
   signup: async (req, res, next) => {
     try {
       const { name, account, email, password, checkPassword } = req.body
+      // !if (!name || !account || !email || !password || !checkPassword) newErrorGenerate('所有欄位皆為必填!', 400)
       if (!name || !account || !email || !password || !checkPassword) newErrorGenerate('所有欄位皆為必填!', 404)
+      // !if (name?.length > USERS_WORD_LIMIT) newErrorGenerate('暱稱字數超出上限!', 400)
       if (name?.length > USERS_WORD_LIMIT) newErrorGenerate('暱稱字數超出上限!', 404)
+      //! if (password !== checkPassword) newErrorGenerate('密碼及確認密碼不相符!', 400)
       if (password !== checkPassword) newErrorGenerate('密碼及確認密碼不相符!', 404)
+      //! const [userAccount, userEmail] = await Promise.all([
+      //!   User.findOne({ where: { account } }),
+      //!   User.findOne({ where: { email } })
+      //! ])
       const userAccount = await User.findOne({ where: { account } })
       const userEmail = await User.findOne({ where: { email } })
+      //! if (userAccount) newErrorGenerate('account 已重複註冊！', 400)
       if (userAccount) newErrorGenerate('account 已重複註冊！', 404)
+      //! if (userEmail) newErrorGenerate('email 已重複註冊！', 400)
       if (userEmail) newErrorGenerate('email 已重複註冊！', 404)
       const hash = await bcrypt.hash(password, 10)
+      //! const let user = await User.create({
       let user = await User.create({
         name,
         account,
@@ -38,8 +48,10 @@ const userController = {
         password: hash,
         role: 'user'
       })
+      // ! const userData = user.toJSON()
       user = user.toJSON()
       delete user.password
+      // ! return res.json({ status: 'success', data: { userData } })
       return res.json({ status: 'success', data: { user } })
     } catch (err) {
       next(err)
@@ -80,17 +92,20 @@ const userController = {
       })
       if (!user) newErrorGenerate('使用者不存在', 404)
       let userData = user.toJSON()
+      //! count 可改sql語法
       const followersCount = user.Followers.length
       const followingsCount = user.Followings.length
       delete userData.Followers
       delete userData.Followings
       userData.isSignInUser = isUser(req)
       userData.tweetsCount = tweets.length
+      //! const newUserData = {
       userData = {
         ...userData,
         followersCount,
         followingsCount
       }
+      //! return res.json(newUserData)
       return res.json(userData)
     } catch (err) {
       next(err)
@@ -196,6 +211,7 @@ const userController = {
         like.Tweet.relativeTimeFromNow = relativeTimeFromNow(like?.Tweet?.createdAt)
         like.isSelfUserLike = selfUserLike.some(s => s.TweetId === like.TweetId)
         delete like.Tweet.User
+        //! 該使用者 like 過的推文清單，排序依 like 紀錄成立的時間，愈新的在愈前面
         return like
       })
       return res.json(likesData)
@@ -228,6 +244,7 @@ const userController = {
         ...follow,
         isSelfUserFollow: helpers?.getUser(req).Followings?.some(s => s.id === follow.followingId)
       }))
+      //! 該使用者的關注清單，排序依照追蹤紀錄成立的時間，愈新的在愈前面
       return res.json(followsData)
     } catch (err) {
       next(err)
@@ -256,6 +273,7 @@ const userController = {
         User: await User.findByPk(follow.followerId, { raw: true, attributes: ['id', 'name', 'avatar', 'account', 'introduction'] }),
         isSelfUserFollow: helpers?.getUser(req)?.Followings?.some(s => s.id === follow.followerId)
       })))
+      //! 該使用者的跟隨者清單，排序依照追蹤紀錄成立的時間，愈新的在愈前面
       return res.json(followsData)
     } catch (err) {
       next(err)
@@ -267,13 +285,18 @@ const userController = {
       const userId = req.params.id
       const user = await User.findByPk(userId, { attributes: ['id'] })
       if (!user) newErrorGenerate('使用者不存在', 404)
+      //! 改400
       if (!isUser(req)) newErrorGenerate('使用者非本帳號無權限編輯', 404)
       const { name, account, email, password, checkPassword, introduction } = req.body
       const { files } = req
+      //! 改400
       if (account ? await User.findOne({ attributes: ['id'], where: { account: account.trim() } }) : false) newErrorGenerate('account 已重複註冊', 404)
+      //! 改400
       if (email ? await User.findOne({ attributes: ['id'], where: { email: email.trim() } }) : false) newErrorGenerate('email 已重複註冊', 404)
+      //! 改400
       if (name?.length > USERS_WORD_LIMIT) newErrorGenerate('字數超出上限', 404)
       if (password && password !== checkPassword) newErrorGenerate('密碼與確認密碼不相符', 404)
+      //! 改400
       if (introduction?.length > USERS_INTRODUCTION_WORD_LIMIT) newErrorGenerate('字數超出上限', 404)
       const hash = password ? await bcrypt.hash(password, 10) : null
       const [fixedFile, selfUser] = await Promise.all([

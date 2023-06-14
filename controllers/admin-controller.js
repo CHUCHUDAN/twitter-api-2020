@@ -46,6 +46,7 @@ const adminController = {
   deleteTweet: async (req, res, next) => {
     try {
       const tweetId = req.params.id
+      // ! const tweet = await Tweet.findByPk(tweetId, { raw: true, attributes: ['id'] })
       const tweet = await Tweet.findByPk(tweetId)
       if (!tweet) newErrorGenerate('該篇推文不存在', 404)
       const deletedTweet = await tweet.destroy()
@@ -73,6 +74,7 @@ const adminController = {
       user.likesCount = likes?.length
       user.followersCount = followers?.length
       user.followingsCount = followings?.length
+      //! 使用者清單預設按推文數排序，由多至少
       return user
     }))
 
